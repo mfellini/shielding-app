@@ -311,5 +311,5 @@ def main_app():
                     st.markdown("**Componenti Secondarie (Modello Ks1 Combinato):**")
                     st.write(f"- Spessore Fuga (X_L): {results.get('X_fuga_mm', 0.0):.2f} mm")
                     st.write(f"- Spessore Diffusione (X_S): {results.get('X_diffusione_mm', 0.0):.2f} mm")
-# if __name__ == "__main__":
-#     main_app()
+if __name__ == "__main__":
+   main_app()
