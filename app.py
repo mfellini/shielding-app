@@ -239,14 +239,14 @@ def run_shielding_calculation(params):
 # 5. INTERFACCIA UTENTE STREAMLIT
 # ====================================================================
 def main_app():
-    st.set_page_config(page_title="ðŸ›¡ï¸ Calcolo Schermatura NCRP 147", layout="wide")
-    st.title("ðŸ›¡ï¸ Calcolo Schermatura Radiologica (NCRP 147)")
+    st.set_page_config(page_title="Calcolo Schermatura NCRP 147", layout="wide")
+    st.title("Calcolo Schermatura Radiologica (NCRP 147)")
     st.caption("Implementazione della logica Ramo 1 e Ramo 2.")
     # --- Sezione Input ---
     col1, col2, col3 = st.columns(3)
     # COL 1: Input Logici
     with col1:
-        st.header("1. Selezione Logica")
+        st.header("1. Selezione informazioni principali")
         tipo_immagine = st.selectbox("Tipo di Immagine", ["RADIOLOGIA DIAGNOSTICA", "CT", "Placeholder"], index=0)
         # Opzioni basate sul Tipo di Immagine
         if tipo_immagine == "RADIOLOGIA DIAGNOSTICA":
@@ -254,7 +254,7 @@ def main_app():
                                             "MAMMOGRAFIA", "ANGIO CARDIACA", "ANGIO PERIFERICA", "ANGIO NEURO", "R&F"]
         else:
              modalita_radiografia_options = ["DLP", "Placeholder"]
-        modalita_radiografia = st.selectbox("ModalitÃ  Radiografica", modalita_radiografia_options, index=0)
+        modalita_radiografia = st.selectbox("Modalità  Radiografica", modalita_radiografia_options, index=0)
         tipo_barriera = st.selectbox("Tipo di Barriera", ["PRIMARIA", "SECONDARIA"])
         materiale_schermatura = st.selectbox("Materiale Schermatura", ["PIOMBO", "CEMENTO"])
     # COL 2: Input Numerici
@@ -301,7 +301,7 @@ def main_app():
             # Display dei risultati principali
             col_res1, col_res2, col_res3 = st.columns(3)
             col_res1.metric("Spessore Finale Richiesto (X)", f"{results['spessore_finale_mm']:.2f} mm {params['materiale_schermatura']}")
-            col_res2.metric("Kerma Non Schermato (alla distanza d)", f"{results.get('kerma_non_schermato', 0.0):.4f} mGy/settimana")
+            col_res2.metric("Kerma Non Schermato (alla distanza d)", f"{results.get('kerma_non_schermato', 0.0):.2f} mGy/settimana")
             col_res3.metric("Fattore di Uso (U) Utilizzato", f"{params['fattore_uso_U']:.2f}")
             # Display dettagli secondari (se disponibili)
             if results['ramo_logico'] in ["RAMO 1: DIAGNOSTICA STANDARD", "RAMO 2: DIAGNOSTICA SPECIALIZZATA"]:
