@@ -261,13 +261,13 @@ def main_app():
     with col2:
         st.header("2. Dati di Esercizio")
         # P: Dose limite (mSv/wk)
-        P_mSv_wk = st.number_input("Dose Limite (P) [mSv/settimana]", value=0.02, format="%.3f") 
+        P_mSv_wk = st.number_input("Dose Limite (P) [mSv/settimana]", value=0.00, format="%.3f") 
         # T: Tasso di Occupazione [0, 1]
         tasso_occupazione_T = st.number_input("Tasso Occupazione (T) [0-1]", value=1.0, format="%.2f", min_value=0.0, max_value=1.0)
         # d: Distanza (m)
-        distanza_d = st.number_input("Distanza dalla Sorgente (d) [metri]", value=2.0, format="%.2f", min_value=0.1)
+        distanza_d = st.number_input("Distanza dalla Sorgente (d) [metri]", value=1.0, format="%.2f", min_value=0.1)
         # U: Fattore di Uso [0, 1]
-        fattore_uso_U = st.number_input("Fattore di Uso (U) [0-1]", value=0.25, format="%.2f", min_value=0.0, max_value=1.0)
+        fattore_uso_U = st.number_input("Fattore di Uso (U) [0-1]", value=1.0, format="%.2f", min_value=0.0, max_value=1.0)
         # N: Pazienti/Settimana
         pazienti_settimana_N = st.number_input("Pazienti/Settimana (N)", value=100, min_value=1)
     # COL 3: Esecuzione
@@ -295,9 +295,9 @@ def main_app():
         results = st.session_state['results']
         st.header("Risultati del Calcolo")
         if 'errore' in results:
-            st.error(f"âŒ Errore Logico/Implementazione: {results['errore']}")
+            st.error(f"Errore Logico/Implementazione: {results['errore']}")
         else:
-            st.success(f"âœ… Calcolo Eseguito: {results['ramo_logico']}")
+            st.success(f"Calcolo Eseguito: {results['ramo_logico']}")
             # Display dei risultati principali
             col_res1, col_res2, col_res3 = st.columns(3)
             col_res1.metric("Spessore Finale Richiesto (X)", f"{results['spessore_finale_mm']:.2f} mm {params['materiale_schermatura']}")
