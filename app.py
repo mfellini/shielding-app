@@ -349,7 +349,7 @@ def main_app():
         
         # NUOVO CAMPO X-PRE (SELECTBOX)
         X_PRE_selection = st.selectbox(
-            "Schermatura X-PRE [mm] (Tabella 4.6)", 
+            "Schermatura X-PRE [mm]", 
             options=list(PRESHIELDING_XPRE_OPTIONS.keys()),
             index=0, # Imposta "NESSUNO (0.0 mm)" come default
             help="Schermatura intrinseca del sistema di ricezione dell'immagine (NCRP 147). Selezionare 0.0 mm se non applicabile."
@@ -377,7 +377,7 @@ def main_app():
             'X_PRE_mm': X_PRE_value 
         }
         
-        if st.button("ESEGUI CALCOLO SCHERMATURA"):
+        if st.button("🟡 ESEGUI CALCOLO SCHERMATURA", type="primary"):
             results = run_shielding_calculation(params)
             st.session_state['results'] = results
             st.session_state['run'] = True
