@@ -284,10 +284,10 @@ def run_shielding_calculation(params):
             risultati['errore'] = "Tipo di barriera non specificato nel Ramo 2."
 
     # -------------------------------------------------------------------------
-    # RAMO 3 (CT) e RAMO 4 (R&F) - PLACEHOLDER
+    # RAMO 3 (TC) e RAMO 4 (R&F) - PLACEHOLDER
     # -------------------------------------------------------------------------
-    elif tipo_immagine == "CT" and modalita_radiografia == "DLP":
-         risultati.update({'ramo_logico': 'RAMO 3: CT (Placeholder)', 'errore': 'Logica CT (DLP) non ancora implementata.'})
+    elif tipo_immagine == "TC" and modalita_radiografia == "DLP":
+         risultati.update({'ramo_logico': 'RAMO 3: TC (Placeholder)', 'errore': 'Logica TC (DLP) non ancora implementata.'})
          
     elif tipo_immagine == "RADIOLOGIA DIAGNOSTICA" and modalita_radiografia == "R&F":
          risultati.update({'ramo_logico': 'RAMO 4: R&F (Placeholder)', 'errore': 'Logica R&F non ancora implementata.'})
@@ -313,7 +313,7 @@ def main_app():
     with col1:
         st.header("1. Selezione informazioni principali")
         
-        tipo_immagine = st.selectbox("Tipo di Immagine", ["RADIOLOGIA DIAGNOSTICA", "CT", "Placeholder"], index=0)
+        tipo_immagine = st.selectbox("Tipo di Immagine", ["RADIOLOGIA DIAGNOSTICA", "TC", "Placeholder"], index=0)
         
         # Opzioni basate sul Tipo di Immagine
         if tipo_immagine == "RADIOLOGIA DIAGNOSTICA":
