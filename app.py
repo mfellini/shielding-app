@@ -95,6 +95,19 @@ ATTENUATION_DATA_SECONDARY = {
     }
 }
 
+# NUOVI DIZIONARI PER TC (RAMO 3) - Basati su kVp
+# TABELLA A.2 (Piombo) e A.3 (Cemento) NCRP 147
+ATTENUATION_DATA_TC = {
+    "PIOMBO": {
+        "120 kVp": {'alpha': 2.246, 'beta': 5.73, 'gamma': 0.547},
+        "140 kVp": {'alpha': 2.009, 'beta': 3.99, 'gamma': 0.342}
+    },
+    "CEMENTO": {
+        "120 kVp": {'alpha': 0.0383, 'beta': 0.0142, 'gamma': 0.658},
+        "140 kVp": {'alpha': 0.0336, 'beta': 0.0122, 'gamma': 0.519}
+    }
+}
+
 # NUOVO DIZIONARIO PER LE SCELTE DELL'UTENTE (PRESHIELDING_XPRE_OPTIONS)
 # [cite_start]Spessore di Preshielding (Xpre) in mm (Tabella 4.6 - Image receptor in table/holder) [cite: 3]
 PRESHIELDING_XPRE_OPTIONS = {
@@ -103,6 +116,25 @@ PRESHIELDING_XPRE_OPTIONS = {
     "CEMENTO (72.0 mm)": 72.0, # Valore standard per Cemento (NCRP 147 Tabella 4.6)
     "ACCIAIO (7.0 mm)": 7.0  # Valore standard per Acciaio (NCRP 147 Tabella 4.6)
 }
+
+# NUOVO DIZIONARIO PER IL RAMO 3 (TC)
+# Valori di Riferimento (Tabella 5.2 NCRP 147)
+# DLP [mGy*cm], CTDIvol [mGy], L [cm]. Usiamo N/A come stringa per i campi non definiti.
+DLP_REFERENCE_VALUES = {
+    # 'Nome Esame': {'DLP': <DLP>, 'CTDIvol': <CTDIvol>, 'L': <Lunghezza>}
+    "TESTA (Brain)": {'DLP': 1200, 'CTDIvol': 60, 'L': 20}, 
+    "TORACE (Chest)": {'DLP': 525, 'CTDIvol': 15, 'L': 35}, 
+    "ADDOME (Abdomen)": {'DLP': 625, 'CTDIvol': 25, 'L': 25},
+    "PELVI (Pelvis)": {'DLP': 500, 'CTDIvol': 25, 'L': 20},
+    # Correzione per Media Corpo
+    "MEDIA CORPO (Torace/Addome/Pelvi)": {'DLP': 550, 'CTDIvol': 'N/A', 'L': 'N/A'}, 
+}
+
+# Coefficienti di Kerma per TC (Tabella 5.2, parte inferiore)
+# Coefficiente di Kerma di diffusione per testa (cm^-1)
+K_HEAD = 9.0e-5 # 9 x 10^-5 cm^-1
+# Coefficiente di Kerma di diffusione per corpo (cm^-1)
+K_BODY = 3.0e-4 # 3 x 10^-4 cm^-1
 
 # ====================================================================
 # 2. FUNZIONI ANALITICHE BASE
@@ -231,6 +263,68 @@ def calculate_special_secondary_thickness(params):
     # L'unica differenza è che usa dati NCRP diversi per Mammografia/Angio (Tab C.1).
     return calculate_secondary_thickness(params)
 
+def calculate_tc_thickness(params):
+    """ 
+    Implementa il calcolo Secondario (Ramo 3 - TC).
+    Calcola il Kerma Secondario non schermato totale per settimana ($K_{tu}$) 
+    e lo spessore di schermatura $X_{mm}$ richiesto.
+    """
+    P = params.get('P_mSv_wk', 0.0) 
+    T = params.get('tasso_occupazione_T', 1.0)
+    d = params.get('distanza_d', 2.0)
+    materiale = params.get('materiale_schermatura')
+    Xpre = params.get('X_PRE_mm', 0.0)
+    
+    # Parametri specifici TC
+    dlp_mGy_cm = params.get('dlp_mGy_cm', 0.0)
+    N_head = params.get('weekly_n_head', 0) 
+    N_body = params.get('weekly_n_body', 0)
+    Kc = params.get('contrast_factor', 1.0) # Fattore di Contrasto
+    # NUOVO PARAMETRO TC
+    kvp = params.get('kvp_tc')
+
+    # --- 1. Calcolo del Kerma non schermato a 1m per paziente (K1sec) ---
+    K1sec_head_mGy_paz = K_HEAD * dlp_mGy_cm * Kc
+    K1sec_body_mGy_paz = 1.2 * K_BODY * dlp_mGy_cm * Kc # Il fattore 1.2 è empirico
+    
+    # --- 2. Calcolo del Kerma non schermato totale settimanale alla distanza d ($K_{tu}$) ---
+    total_kerma_at_1m_mGy_wk = (K1sec_head_mGy_paz * N_head) + (K1sec_body_mGy_paz * N_body)
+    
+    if d <= 0:
+        kerma_tc_non_schermato_mGy_wk = 0.0
+    else:
+        # $K_{tu}$ (Kerma Settimanale alla distanza d)
+        # ksec=(1/d^2) * (Nhead*k1sec(head) + Nbody*k1sec(body))
+        kerma_tc_non_schermato_mGy_wk = (1 / (d ** 2)) * total_kerma_at_1m_mGy_wk
+    
+    # --- 3. Calcolo del Fattore di Trasmittanza B ($B_{T}$) ---
+    if kerma_tc_non_schermato_mGy_wk * T <= 0:
+        B_T = 1.0 # B minimo (Kerma incidente nullo o trascurabile)
+    else:
+        # Formula richiesta: B = P / (T * K_tu)
+        B_T = P / (T * kerma_tc_non_schermato_mGy_wk)
+        
+    # --- 4. Calcolo dello Spessore X richiesto (Usa i nuovi dati ATTENUATION_DATA_TC) ---
+    
+    # Verifica che i dati di attenuazione per il materiale e il kvp esistano
+    if materiale not in ATTENUATION_DATA_TC or kvp not in ATTENUATION_DATA_TC[materiale]:
+        return 0.0, 0.0, f"Dati di attenuazione TC (Materiale/kVp) mancanti per {materiale} a {kvp}."
+
+    data_tc_attenuation = ATTENUATION_DATA_TC[materiale][kvp]
+    alpha, beta, gamma = data_tc_attenuation['alpha'], data_tc_attenuation['beta'], data_tc_attenuation['gamma']
+    
+    Xref_mm = calcola_spessore_x(alpha, beta, gamma, B_T)
+    Xfinale_mm = max(0.0, Xref_mm - Xpre)
+
+    log_msg = (
+        f"K1sec(Head) = {K1sec_head_mGy_paz:.2e} mGy/paz. "
+        f"K1sec(Body) = {K1sec_body_mGy_paz:.2e} mGy/paz. "
+        f"$K_{{tu}}$ (a d={d}m) = {kerma_tc_non_schermato_mGy_wk:.2e} mGy/wk. "
+        f"B = {B_T:.4e}. Xref={Xref_mm:.2f}mm. Xpre={Xpre:.2f}mm. (kVp: {kvp})"
+    )
+    
+    return Xfinale_mm, kerma_tc_non_schermato_mGy_wk, log_msg
+
 # ====================================================================
 # 4. LOGICA DI BACKEND PRINCIPALE (IF/THEN/ELSE)
 # ====================================================================
@@ -326,6 +420,15 @@ def main_app():
         tipo_barriera = st.selectbox("Tipo di Barriera", ["PRIMARIA", "SECONDARIA"])
         materiale_schermatura = st.selectbox("Materiale Schermatura", ["PIOMBO", "CEMENTO"])
         
+        # NUOVO CAMPO kVp PER TC
+        kvp_tc = "N/A" # Default per non-TC
+        if tipo_immagine == "TC":
+            kvp_tc = st.selectbox(
+                "Tensione di Picco (kVp) TC", 
+                list(ATTENUATION_DATA_TC[materiale_schermatura].keys()), # Esempio: ["120 kVp", "140 kVp"]
+                index=0
+            )
+
     # COL 2: Input Numerici
     with col2:
         st.header("2. Dati di Esercizio")
@@ -345,6 +448,38 @@ def main_app():
         # N: Pazienti/Settimana
         pazienti_settimana_N = st.number_input("Pazienti/Settimana (N)", value=100, min_value=1)
         
+        # ====================================================================
+        # NUOVI CAMPI SPECIFICI TC (RAMO 3)
+        # ====================================================================
+        weekly_n_head = 0
+        weekly_n_body = 0
+        if tipo_immagine == "TC":
+            st.markdown("---") # Separatore per i nuovi campi TC
+            st.subheader("Ripartizione Esami Settimanali (N)")
+            
+            weekly_n_head = st.number_input(
+                "WEEKLY N HEAD PROCED", 
+                value=40, 
+                min_value=0, 
+                help="Numero di procedure TC di Testa a settimana (usato nel calcolo del Kerma di Fuga)."
+            )
+            
+            weekly_n_body = st.number_input(
+                "WEEKLY N BODY PROCED", 
+                value=60, 
+                min_value=0, 
+                help="Numero di procedure TC di Corpo a settimana (usato nel calcolo del Kerma di Fuga)."
+            )
+
+            contrast_factor = st.number_input(
+                "CONTRAST Factor ($K_c$)", 
+                value=1.4, 
+                min_value=1.0, 
+                max_value=2.0, 
+                format="%.1f",
+                help="Fattore moltiplicativo per il Kerma dovuto all'uso di Mezzo di Contrasto (range 1.0 a 2.0)."
+            )
+
         st.markdown("---") # Separatore visivo
         
         # NUOVO CAMPO X-PRE (SELECTBOX)
