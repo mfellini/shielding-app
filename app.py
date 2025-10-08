@@ -495,7 +495,7 @@ def main_app():
             "Schermatura X-PRE detettore o barriera pre-esistente [mm]", 
             options=list(PRESHIELDING_XPRE_OPTIONS.keys()),
             index=0, 
-            help="Schermatura intrinseca del sistema di ricezione dell'immagine (NCRP 147)."
+            help="Schermatura intrinseca del sistema di ricezione dell'immagine o pre-esistente (NCRP 147)."
         )
         
         # Ottieni il valore numerico (mm) dalla selezione
