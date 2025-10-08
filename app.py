@@ -378,18 +378,30 @@ def run_shielding_calculation(params):
             risultati['errore'] = "Tipo di barriera non specificato nel Ramo 2."
 
     # -------------------------------------------------------------------------
-    # RAMO 3 (TC) e RAMO 4 (R&F) - PLACEHOLDER
+    # RAMO 3: TC (Tomografia Computerizzata)
     # -------------------------------------------------------------------------
-    elif tipo_immagine == "TC" and modalita_radiografia == "DLP":
-         risultati.update({'ramo_logico': 'RAMO 3: TC (Placeholder)', 'errore': 'Logica TC (DLP) non ancora implementata.'})
-         
-    elif tipo_immagine == "RADIOLOGIA DIAGNOSTICA" and modalita_radiografia == "R&F":
-         risultati.update({'ramo_logico': 'RAMO 4: R&F (Placeholder)', 'errore': 'Logica R&F non ancora implementata.'})
-    
-    else:
-        risultati['errore'] = "Combinazione di 'Tipo Immagine' e 'Modalità Radiografia' non prevista nel flusso logico."
+    elif tipo_immagine == "TC": 
+        risultati['ramo_logico'] = 'RAMO 3: TC (Calcolo Spessore)'
         
-    return risultati
+        # Per TC, consideriamo solo barriere Secondarie (la Primaria è trascurata o inclusa nella Secondaria)
+        if tipo_barriera == "PRIMARIA":
+            risultati['spessore_finale_mm'] = 0.0
+            risultati['kerma_non_schermato'] = 0.0
+            risultati['dettaglio'] = "TC - Calcolo Primario non richiesto."
+        
+        elif tipo_barriera == "SECONDARIA":
+            # Chiamata al nuovo calcolo TC
+            X_mm, K_tu, log_msg = calculate_tc_thickness(params)
+            
+            # Il Kerma non schermato per TC (Ktu) è il valore di riferimento per la trasmittanza B
+            risultati.update({
+                'spessore_finale_mm': X_mm, 
+                'kerma_non_schermato': K_tu, 
+                'dettaglio': f"Spessore TC calcolato. {log_msg}"
+            })
+            
+        else:
+            risultati['errore'] = "Tipo di barriera non specificato nel Ramo 3 (TC)."
 
 # ====================================================================
 # 5. INTERFACCIA UTENTE STREAMLIT
