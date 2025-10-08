@@ -402,6 +402,8 @@ def run_shielding_calculation(params):
             
         else:
             risultati['errore'] = "Tipo di barriera non specificato nel Ramo 3 (TC)."
+    # FIX CRUCIALE: Ritorna sempre il dizionario risultati
+    return risultati
 
 # ====================================================================
 # 5. INTERFACCIA UTENTE STREAMLIT
