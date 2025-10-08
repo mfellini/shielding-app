@@ -114,7 +114,7 @@ PRESHIELDING_XPRE_OPTIONS = {
     "NESSUNO (0.0 mm)": 0.0,
     "PIOMBO (0.85 mm)": 0.85, # Valore standard per Pb (NCRP 147 Tabella 4.6)
     "CEMENTO (72.0 mm)": 72.0, # Valore standard per Cemento (NCRP 147 Tabella 4.6)
-    "ACCIAIO (7.0 mm)": 7.0  # Valore standard per Acciaio (NCRP 147 Tabella 4.6)
+    "ACCIAIO (7.0 mm)": 7.0   # Valore standard per Acciaio (NCRP 147 Tabella 4.6)
 }
 
 # NUOVO DIZIONARIO PER IL RAMO 3 (TC)
@@ -126,7 +126,7 @@ DLP_REFERENCE_VALUES = {
     "TORACE (Chest)": {'DLP': 525, 'CTDIvol': 15, 'L': 35}, 
     "ADDOME (Abdomen)": {'DLP': 625, 'CTDIvol': 25, 'L': 25},
     "PELVI (Pelvis)": {'DLP': 500, 'CTDIvol': 25, 'L': 20},
-    # Correzione per Media Corpo
+    # CORREZIONE: Imposto la chiave come richiesto (Body average 550)
     "MEDIA CORPO (Torace/Addome/Pelvi)": {'DLP': 550, 'CTDIvol': 'N/A', 'L': 'N/A'}, 
 }
 
@@ -135,6 +135,9 @@ DLP_REFERENCE_VALUES = {
 K_HEAD = 9.0e-5 # 9 x 10^-5 cm^-1
 # Coefficiente di Kerma di diffusione per corpo (cm^-1)
 K_BODY = 3.0e-4 # 3 x 10^-4 cm^-1
+
+# Variabile per impostare il default DLP per la TC nel selettore di Streamlit (NUOVA RIGA AGGIUNTA)
+DLP_DEFAULT_KEY_TC = "MEDIA CORPO (Torace/Addome/Pelvi)" 
 
 # ====================================================================
 # 2. FUNZIONI ANALITICHE BASE
@@ -275,8 +278,8 @@ def calculate_tc_thickness(params):
     materiale = params.get('materiale_schermatura')
     Xpre = params.get('X_PRE_mm', 0.0)
     
-    # Parametri specifici TC
-    dlp_mGy_cm = params.get('dlp_mGy_cm', 0.0)
+    # Parametri specifici TC (Recuperati da params)
+    dlp_mGy_cm = params.get('dlp_mGy_cm', 0.0) # Valore DLP selezionato dall'utente
     N_head = params.get('weekly_n_head', 0) 
     N_body = params.get('weekly_n_body', 0)
     Kc = params.get('contrast_factor', 1.0) # Fattore di Contrasto
@@ -320,7 +323,7 @@ def calculate_tc_thickness(params):
         f"K1sec(Head) = {K1sec_head_mGy_paz:.2e} mGy/paz. "
         f"K1sec(Body) = {K1sec_body_mGy_paz:.2e} mGy/paz. "
         f"$K_{{tu}}$ (a d={d}m) = {kerma_tc_non_schermato_mGy_wk:.2e} mGy/wk. "
-        f"B = {B_T:.4e}. Xref={Xref_mm:.2f}mm. Xpre={Xpre:.2f}mm. (kVp: {kvp})"
+        f"B = {B_T:.4e}. Xref={Xref_mm:.2f}mm. Xpre={Xpre:.2f}mm. (kVp: {kvp}, DLP: {dlp_mGy_cm})"
     )
     
     return Xfinale_mm, kerma_tc_non_schermato_mGy_wk, log_msg
@@ -426,7 +429,7 @@ def main_app():
         # Opzioni basate sul Tipo di Immagine
         if tipo_immagine == "RADIOLOGIA DIAGNOSTICA":
             modalita_radiografia_options = ["STANZA RADIOGRAFICA", "RADIOGRAFIA TORACE", "FLUOROSCOPIA", 
-                                            "MAMMOGRAFIA", "ANGIO CARDIACA", "ANGIO PERIFERICA", "ANGIO NEURO", "R&F"]
+                                             "MAMMOGRAFIA", "ANGIO CARDIACA", "ANGIO PERIFERICA", "ANGIO NEURO", "R&F"]
         else:
              modalita_radiografia_options = ["DLP", "Placeholder"]
              
@@ -467,22 +470,41 @@ def main_app():
         # ====================================================================
         weekly_n_head = 0
         weekly_n_body = 0
+        
+        # Gestione del DLP (SEZIONE MODIFICATA)
+        dlp_mGy_cm = 0.0
+        contrast_factor = 1.0
+        
         if tipo_immagine == "TC":
             st.markdown("---") # Separatore per i nuovi campi TC
+            st.subheader("Parametri TC Specifici")
+            
+            # NUOVO SELECTBOX PER SELEZIONE DLP (Imposta 550 come default)
+            dlp_option_key = st.selectbox(
+                "DLP di Riferimento (mGy*cm) - Tab. 5.2",
+                options=list(DLP_REFERENCE_VALUES.keys()),
+                # IMPORTO E USO IL NUOVO DEFAULT
+                index=list(DLP_REFERENCE_VALUES.keys()).index(DLP_DEFAULT_KEY_TC), 
+                help="Seleziona il DLP medio di riferimento per la procedura."
+            )
+            # Recupera il valore DLP numerico per il calcolo
+            dlp_mGy_cm = DLP_REFERENCE_VALUES[dlp_option_key]['DLP']
+            
+            st.write(f"DLP selezionato: **{dlp_mGy_cm}** mGy·cm")
             st.subheader("Ripartizione Esami Settimanali (N)")
             
             weekly_n_head = st.number_input(
                 "WEEKLY N HEAD PROCED", 
                 value=40, 
                 min_value=0, 
-                help="Numero di procedure TC di Testa a settimana (usato nel calcolo del Kerma di Fuga)."
+                help="Numero di procedure TC di Testa a settimana."
             )
             
             weekly_n_body = st.number_input(
                 "WEEKLY N BODY PROCED", 
                 value=60, 
                 min_value=0, 
-                help="Numero di procedure TC di Corpo a settimana (usato nel calcolo del Kerma di Fuga)."
+                help="Numero di procedure TC di Corpo a settimana."
             )
 
             contrast_factor = st.number_input(
@@ -491,7 +513,7 @@ def main_app():
                 min_value=1.0, 
                 max_value=2.0, 
                 format="%.1f",
-                help="Fattore moltiplicativo per il Kerma dovuto all'uso di Mezzo di Contrasto (range 1.0 a 2.0)."
+                help="Fattore moltiplicativo per il Kerma dovuto all'uso di Mezzo di Contrasto."
             )
 
         st.markdown("---") # Separatore visivo
@@ -512,6 +534,7 @@ def main_app():
         st.header("3. Esecuzione")
         
         # Creazione del dizionario dei parametri
+        # AGGIORNAMENTO DEL DIZIONARIO PARAMETRI (NUOVI CAMPI TC)
         params = {
             'tipo_immagine': tipo_immagine,
             'modalita_radiografia': modalita_radiografia,
@@ -522,11 +545,22 @@ def main_app():
             'distanza_d': distanza_d,
             'fattore_uso_U': fattore_uso_U,
             'pazienti_settimana_N': pazienti_settimana_N,
-            # AGGIUNGI X-PRE VALORE NUMERICO
-            'X_PRE_mm': X_PRE_value 
+            'X_PRE_mm': X_PRE_value,
+            # AGGIUNTA DEI PARAMETRI TC (Cruciale per RAMO 3)
+            'dlp_mGy_cm': dlp_mGy_cm, 
+            'weekly_n_head': weekly_n_head,
+            'weekly_n_body': weekly_n_body,
+            'contrast_factor': contrast_factor,
+            'kvp_tc': kvp_tc
         }
         
         if st.button("🟡 ESEGUI CALCOLO SCHERMATURA", type="primary"):
+            # Inizializza session state se non esiste (utile per l'esecuzione)
+            if 'results' not in st.session_state:
+                st.session_state['results'] = None
+            if 'run' not in st.session_state:
+                st.session_state['run'] = False
+                
             results = run_shielding_calculation(params)
             st.session_state['results'] = results
             st.session_state['run'] = True
@@ -558,5 +592,22 @@ def main_app():
                     st.markdown("**Componenti Secondarie (Modello Ks1 Combinato):**")
                     st.write(f"- Spessore Fuga (X_L): {results.get('X_fuga_mm', 0.0):.2f} mm")
                     st.write(f"- Spessore Diffusione (X_S): {results.get('X_diffusione_mm', 0.0):.2f} mm")
+            
+            elif results['ramo_logico'] == 'RAMO 3: TC (Calcolo Spessore)':
+                 st.subheader("Dettagli del Processo")
+                 st.info(results['dettaglio'])
+                 st.markdown("**Parametri TC utilizzati:**")
+                 st.write(f"- DLP di Riferimento: {params['dlp_mGy_cm']} mGy·cm")
+                 st.write(f"- $K_c$ (Fattore Contrasto): {params['contrast_factor']:.1f}")
+                 st.write(f"- N Testa/settimana: {params['weekly_n_head']}")
+                 st.write(f"- N Corpo/settimana: {params['weekly_n_body']}")
+                 st.write(f"- $X_{{pre}}$ (Pre-schermatura): {params['X_PRE_mm']:.2f} mm")
+                 
 if __name__ == "__main__":
+   # FIX: Aggiunto un controllo per evitare errori Streamlit se non in session state
+   if 'run' not in st.session_state:
+       st.session_state['run'] = False
+   if 'results' not in st.session_state:
+       st.session_state['results'] = None
+       
    main_app()
