@@ -523,7 +523,7 @@ def main_app():
             "Schermatura X-PRE- DETETTORE O PREESISTENTE[mm]", 
             options=list(PRESHIELDING_XPRE_OPTIONS.keys()),
             index=0, # Imposta "NESSUNO (0.0 mm)" come default
-            help="Schermatura intrinseca del sistema di ricezione dell'immagine (NCRP 147). Selezionare 0.0 mm se non applicabile."
+            help="Schermatura intrinseca del sistema di ricezione dell'immagine o preesistente(NCRP 147). Selezionare 0.0 mm se non applicabile."
         )
         
         # Ottieni il valore numerico (mm) dalla selezione
