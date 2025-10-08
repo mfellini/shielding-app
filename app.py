@@ -520,7 +520,7 @@ def main_app():
         
         # NUOVO CAMPO X-PRE (SELECTBOX)
         X_PRE_selection = st.selectbox(
-            "Schermatura X-PRE [mm]", 
+            "Schermatura X-PRE- DETETTORE O PREESISTENTE[mm]", 
             options=list(PRESHIELDING_XPRE_OPTIONS.keys()),
             index=0, # Imposta "NESSUNO (0.0 mm)" come default
             help="Schermatura intrinseca del sistema di ricezione dell'immagine (NCRP 147). Selezionare 0.0 mm se non applicabile."
