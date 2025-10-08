@@ -5,12 +5,12 @@ import math
 # 1. DATI NCRP 147 CONSOLIDATI
 # ====================================================================
 
-# [cite_start]Kp1: Kerma primario non schermato a 1m per paziente [mGy/paziente] (Tabella 4.5) [cite: 1]
+# Kp1: Kerma primario non schermato a 1m per paziente [mGy/paziente] (Tabella 4.5)
 KERMA_KP1 = {
     # Mappatura delle scelte del frontend alle righe della Tabella 4.5
-    "STANZA RADIOGRAFICA": 5.2,          # Rad Room (floor or other barriers) [cite: 1]
-    "RADIOGRAFIA TORACE": 1.2,           # Chest Room [cite: 1]
-    "FLUOROSCOPIA": 5.9,                 # Rad Tube (R&F Room) [cite: 1]
+    "STANZA RADIOGRAFICA": 5.2,          # Rad Room (floor or other barriers)
+    "RADIOGRAFIA TORACE": 1.2,           # Chest Room
+    "FLUOROSCOPIA": 5.9,                 # Rad Tube (R&F Room)
     
     # Dati Specializzati (usiamo valori da Tabella 4.5/4.7 se non specifici)
     "MAMMOGRAFIA": 0.0,                  # La Mammografia è trattata solo come Secondaria nel Ramo 2 (con Ks1)
@@ -33,32 +33,32 @@ KERMA_KS1 = {
     "ANGIO NEURO": 0.70
 }
 
-# [cite_start]Parametri di Fitting (Alfa, Beta, Gamma) per Barriera Primaria (Tabella B.1) [cite: 2]
+# Parametri di Fitting (Alfa, Beta, Gamma) per Barriera Primaria (Tabella B.1)
 ATTENUATION_DATA_PRIMARY = {
     "STANZA RADIOGRAFICA": {
-        "PIOMBO": {'alpha': 2.651, 'beta': 1.656e+01, 'gamma': 4.585e-01}, # Rad Room floor... [cite: 2]
-        "CEMENTO": {'alpha': 3.994e-02, 'beta': 1.448e+02, 'gamma': 4.231e-01} # [cite: 2]
+        "PIOMBO": {'alpha': 2.651, 'beta': 1.656e+01, 'gamma': 4.585e-01}, # Rad Room floor...
+        "CEMENTO": {'alpha': 3.994e-02, 'beta': 1.448e+02, 'gamma': 4.231e-01} #
     },
     "RADIOGRAFIA TORACE": {
-        "PIOMBO": {'alpha': 2.283, 'beta': 1.074e+01, 'gamma': 6.370e-01}, # Chest Room [cite: 2]
-        "CEMENTO": {'alpha': 3.622e-02, 'beta': 7.766e+01, 'gamma': 5.404e-01} # [cite: 2]
+        "PIOMBO": {'alpha': 2.283, 'beta': 1.074e+01, 'gamma': 6.370e-01}, # Chest Room
+        "CEMENTO": {'alpha': 3.622e-02, 'beta': 7.766e+01, 'gamma': 5.404e-01} #
     },
     "FLUOROSCOPIA": {
-        "PIOMBO": {'alpha': 2.295, 'beta': 1.300e+01, 'gamma': 5.573e-01}, # Rad Tube R&F [cite: 2]
-        "CEMENTO": {'alpha': 3.549e-02, 'beta': 1.164e+02, 'gamma': 5.774e-01} # [cite: 2]
+        "PIOMBO": {'alpha': 2.295, 'beta': 1.300e+01, 'gamma': 5.573e-01}, # Rad Tube R&F
+        "CEMENTO": {'alpha': 3.549e-02, 'beta': 1.164e+02, 'gamma': 5.774e-01} #
     },
     # Dati Specializzati (usati se per errore si chiede Primaria in Ramo 2)
     "MAMMOGRAFIA": {
-        "PIOMBO": {'alpha': 3.060e+01, 'beta': 1.776e+02, 'gamma': 3.308e-01}, # Mammography Room [cite: 2]
-        "CEMENTO": {'alpha': 2.577e-01, 'beta': 1.765e+00, 'gamma': 3.644e-01} # [cite: 2]
+        "PIOMBO": {'alpha': 3.060e+01, 'beta': 1.776e+02, 'gamma': 3.308e-01}, # Mammography Room
+        "CEMENTO": {'alpha': 2.577e-01, 'beta': 1.765e+00, 'gamma': 3.644e-01} #
     },
     "ANGIO CARDIACA": {
-        "PIOMBO": {'alpha': 2.389, 'beta': 1.426e+01, 'gamma': 5.948e-01}, # Cardiac Angiography [cite: 2]
-        "CEMENTO": {'alpha': 3.717e-02, 'beta': 1.087e+02, 'gamma': 4.879e-01} # [cite: 2]
+        "PIOMBO": {'alpha': 2.389, 'beta': 1.426e+01, 'gamma': 5.948e-01}, # Cardiac Angiography
+        "CEMENTO": {'alpha': 3.717e-02, 'beta': 1.087e+02, 'gamma': 4.879e-01} #
     },
     "ANGIO PERIFERICA": {
-        "PIOMBO": {'alpha': 2.728, 'beta': 1.852e+01, 'gamma': 4.614e-01}, # Peripheral Angiography [cite: 2]
-        "CEMENTO": {'alpha': 4.292e-02, 'beta': 1.538e+02, 'gamma': 4.236e-01} # [cite: 2]
+        "PIOMBO": {'alpha': 2.728, 'beta': 1.852e+01, 'gamma': 4.614e-01}, # Peripheral Angiography
+        "CEMENTO": {'alpha': 4.292e-02, 'beta': 1.538e+02, 'gamma': 4.236e-01} #
     }
 }
 
@@ -109,7 +109,7 @@ ATTENUATION_DATA_TC = {
 }
 
 # NUOVO DIZIONARIO PER LE SCELTE DELL'UTENTE (PRESHIELDING_XPRE_OPTIONS)
-# [cite_start]Spessore di Preshielding (Xpre) in mm (Tabella 4.6 - Image receptor in table/holder) [cite: 3]
+# Spessore di Preshielding (Xpre) in mm (Tabella 4.6 - Image receptor in table/holder)
 PRESHIELDING_XPRE_OPTIONS = {
     "NESSUNO (0.0 mm)": 0.0,
     "PIOMBO (0.85 mm)": 0.85, # Valore standard per Pb (NCRP 147 Tabella 4.6)
@@ -117,27 +117,19 @@ PRESHIELDING_XPRE_OPTIONS = {
     "ACCIAIO (7.0 mm)": 7.0   # Valore standard per Acciaio (NCRP 147 Tabella 4.6)
 }
 
-# NUOVO DIZIONARIO PER IL RAMO 3 (TC)
-# Valori di Riferimento (Tabella 5.2 NCRP 147)
-# DLP [mGy*cm], CTDIvol [mGy], L [cm]. Usiamo N/A come stringa per i campi non definiti.
-DLP_REFERENCE_VALUES = {
-    # 'Nome Esame': {'DLP': <DLP>, 'CTDIvol': <CTDIvol>, 'L': <Lunghezza>}
-    "TESTA (Brain)": {'DLP': 1200, 'CTDIvol': 60, 'L': 20}, 
-    "TORACE (Chest)": {'DLP': 525, 'CTDIvol': 15, 'L': 35}, 
-    "ADDOME (Abdomen)": {'DLP': 625, 'CTDIvol': 25, 'L': 25},
-    "PELVI (Pelvis)": {'DLP': 500, 'CTDIvol': 25, 'L': 20},
-    # CORREZIONE: Imposto la chiave come richiesto (Body average 550)
-    "MEDIA CORPO (Torace/Addome/Pelvi)": {'DLP': 550, 'CTDIvol': 'N/A', 'L': 'N/A'}, 
+# DLP Fissi di Riferimento per il calcolo K1sec (Tabella 5.2 NCRP 147)
+# DLP [mGy*cm]
+DLP_TC_FIXED_VALUES = {
+    "HEAD": 1200, 
+    "BODY": 550, 
 }
 
 # Coefficienti di Kerma per TC (Tabella 5.2, parte inferiore)
 # Coefficiente di Kerma di diffusione per testa (cm^-1)
-K_HEAD = 9.0e-5 # 9 x 10^-5 cm^-1
+K_HEAD_DIFF = 9.0e-5 # 9 x 10^-5 cm^-1
 # Coefficiente di Kerma di diffusione per corpo (cm^-1)
-K_BODY = 3.0e-4 # 3 x 10^-4 cm^-1
+K_BODY_DIFF = 3.0e-4 # 3 x 10^-4 cm^-1
 
-# Variabile per impostare il default DLP per la TC nel selettore di Streamlit (NUOVA RIGA AGGIUNTA)
-DLP_DEFAULT_KEY_TC = "MEDIA CORPO (Torace/Addome/Pelvi)" 
 
 # ====================================================================
 # 2. FUNZIONI ANALITICHE BASE
@@ -189,7 +181,6 @@ def calculate_primary_thickness(params):
     N = params.get('pazienti_settimana_N', 100)
     modalita = params.get('modalita_radiografia')
     materiale = params.get('materiale_schermatura')
-    # RECUPERO X-PRE DALL'INPUT DELL'UTENTE
     Xpre = params.get('X_PRE_mm', 0.0) 
 
     Kp1 = KERMA_KP1.get(modalita, 0.0) 
@@ -198,7 +189,6 @@ def calculate_primary_thickness(params):
         return 0.0, 0.0, "Dati di attenuazione Primaria mancanti."
         
     data = ATTENUATION_DATA_PRIMARY[modalita][materiale]
-    # RIMOZIONE DELLA RIGA Xpre = PRESHIELDING_XPRE.get(materiale, 0.0)
     alpha, beta, gamma = data['alpha'], data['beta'], data['gamma']
     
     # 1. Kerma non schermato (incidente)
@@ -228,7 +218,6 @@ def calculate_secondary_thickness(params):
     N = params.get('pazienti_settimana_N', 100)
     modalita = params.get('modalita_radiografia')
     materiale = params.get('materiale_schermatura')
-    # RECUPERO X-PRE DALL'INPUT DELL'UTENTE
     Xpre = params.get('X_PRE_mm', 0.0) 
 
     Ks1 = KERMA_KS1.get(modalita, 0.0) 
@@ -237,7 +226,6 @@ def calculate_secondary_thickness(params):
         return 0.0, 0.0, 0.0, 0.0, "Dati di attenuazione Secondaria mancanti."
         
     data = ATTENUATION_DATA_SECONDARY[modalita][materiale]
-    # RIMOZIONE DELLA RIGA Xpre = PRESHIELDING_XPRE.get(materiale, 0.0)
     alpha, beta, gamma = data['alpha'], data['beta'], data['gamma']
     
     # 1. Kerma non schermato (incidente)
@@ -262,15 +250,12 @@ def calculate_secondary_thickness(params):
 
 def calculate_special_secondary_thickness(params):
     """ Implementa il calcolo Secondario (Ramo 2). Stesso flusso logico di Ramo 1."""
-    # Riutilizzo del codice di calculate_secondary_thickness, che è identico nel flusso.
-    # L'unica differenza è che usa dati NCRP diversi per Mammografia/Angio (Tab C.1).
     return calculate_secondary_thickness(params)
 
 def calculate_tc_thickness(params):
     """ 
     Implementa il calcolo Secondario (Ramo 3 - TC).
-    Calcola il Kerma Secondario non schermato totale per settimana ($K_{tu}$) 
-    e lo spessore di schermatura $X_{mm}$ richiesto.
+    Utilizza i DLP fissi (1200 mGy*cm per Head, 550 mGy*cm per Body) per calcolare il Kerma K1sec.
     """
     P = params.get('P_mSv_wk', 0.0) 
     T = params.get('tasso_occupazione_T', 1.0)
@@ -279,16 +264,19 @@ def calculate_tc_thickness(params):
     Xpre = params.get('X_PRE_mm', 0.0)
     
     # Parametri specifici TC (Recuperati da params)
-    dlp_mGy_cm = params.get('dlp_mGy_cm', 0.0) # Valore DLP selezionato dall'utente
     N_head = params.get('weekly_n_head', 0) 
     N_body = params.get('weekly_n_body', 0)
     Kc = params.get('contrast_factor', 1.0) # Fattore di Contrasto
-    # NUOVO PARAMETRO TC
     kvp = params.get('kvp_tc')
-
+    
     # --- 1. Calcolo del Kerma non schermato a 1m per paziente (K1sec) ---
-    K1sec_head_mGy_paz = K_HEAD * dlp_mGy_cm * Kc
-    K1sec_body_mGy_paz = 1.2 * K_BODY * dlp_mGy_cm * Kc # Il fattore 1.2 è empirico
+    # K1sec(head) = khead * DLP_head * Kc
+    dlp_head = DLP_TC_FIXED_VALUES["HEAD"]
+    K1sec_head_mGy_paz = K_HEAD_DIFF * dlp_head * Kc
+    
+    # K1sec(body) = 1.2 * kbody * DLP_body * Kc
+    dlp_body = DLP_TC_FIXED_VALUES["BODY"]
+    K1sec_body_mGy_paz = 1.2 * K_BODY_DIFF * dlp_body * Kc 
     
     # --- 2. Calcolo del Kerma non schermato totale settimanale alla distanza d ($K_{tu}$) ---
     total_kerma_at_1m_mGy_wk = (K1sec_head_mGy_paz * N_head) + (K1sec_body_mGy_paz * N_body)
@@ -297,21 +285,18 @@ def calculate_tc_thickness(params):
         kerma_tc_non_schermato_mGy_wk = 0.0
     else:
         # $K_{tu}$ (Kerma Settimanale alla distanza d)
-        # ksec=(1/d^2) * (Nhead*k1sec(head) + Nbody*k1sec(body))
         kerma_tc_non_schermato_mGy_wk = (1 / (d ** 2)) * total_kerma_at_1m_mGy_wk
     
     # --- 3. Calcolo del Fattore di Trasmittanza B ($B_{T}$) ---
     if kerma_tc_non_schermato_mGy_wk * T <= 0:
-        B_T = 1.0 # B minimo (Kerma incidente nullo o trascurabile)
+        B_T = 1.0 
     else:
-        # Formula richiesta: B = P / (T * K_tu)
         B_T = P / (T * kerma_tc_non_schermato_mGy_wk)
         
     # --- 4. Calcolo dello Spessore X richiesto (Usa i nuovi dati ATTENUATION_DATA_TC) ---
     
-    # Verifica che i dati di attenuazione per il materiale e il kvp esistano
     if materiale not in ATTENUATION_DATA_TC or kvp not in ATTENUATION_DATA_TC[materiale]:
-        return 0.0, 0.0, f"Dati di attenuazione TC (Materiale/kVp) mancanti per {materiale} a {kvp}."
+        return 0.0, 0.0, f"Dati di attenuazione TC (Materiale/kVp) mancanti per {materiale} a {kvp}.", 0.0, 0.0
 
     data_tc_attenuation = ATTENUATION_DATA_TC[materiale][kvp]
     alpha, beta, gamma = data_tc_attenuation['alpha'], data_tc_attenuation['beta'], data_tc_attenuation['gamma']
@@ -320,13 +305,13 @@ def calculate_tc_thickness(params):
     Xfinale_mm = max(0.0, Xref_mm - Xpre)
 
     log_msg = (
-        f"K1sec(Head) = {K1sec_head_mGy_paz:.2e} mGy/paz. "
-        f"K1sec(Body) = {K1sec_body_mGy_paz:.2e} mGy/paz. "
+        f"K1sec(Head) = {K1sec_head_mGy_paz:.2e} mGy/paz (DLP={dlp_head}). "
+        f"K1sec(Body) = {K1sec_body_mGy_paz:.2e} mGy/paz (DLP={dlp_body}). "
         f"$K_{{tu}}$ (a d={d}m) = {kerma_tc_non_schermato_mGy_wk:.2e} mGy/wk. "
-        f"B = {B_T:.4e}. Xref={Xref_mm:.2f}mm. Xpre={Xpre:.2f}mm. (kVp: {kvp}, DLP: {dlp_mGy_cm})"
+        f"B = {B_T:.4e}. Xref={Xref_mm:.2f}mm. Xpre={Xpre:.2f}mm. (kVp: {kvp}, $K_c$: {Kc})"
     )
     
-    return Xfinale_mm, kerma_tc_non_schermato_mGy_wk, log_msg
+    return Xfinale_mm, kerma_tc_non_schermato_mGy_wk, log_msg, K1sec_head_mGy_paz, K1sec_body_mGy_paz
 
 # ====================================================================
 # 4. LOGICA DI BACKEND PRINCIPALE (IF/THEN/ELSE)
@@ -386,26 +371,24 @@ def run_shielding_calculation(params):
     elif tipo_immagine == "TC": 
         risultati['ramo_logico'] = 'RAMO 3: TC (Calcolo Spessore)'
         
-        # Per TC, consideriamo solo barriere Secondarie (la Primaria è trascurata o inclusa nella Secondaria)
         if tipo_barriera == "PRIMARIA":
             risultati['spessore_finale_mm'] = 0.0
             risultati['kerma_non_schermato'] = 0.0
             risultati['dettaglio'] = "TC - Calcolo Primario non richiesto."
         
         elif tipo_barriera == "SECONDARIA":
-            # Chiamata al nuovo calcolo TC
-            X_mm, K_tu, log_msg = calculate_tc_thickness(params)
+            X_mm, K_tu, log_msg, K1sec_head, K1sec_body = calculate_tc_thickness(params)
             
-            # Il Kerma non schermato per TC (Ktu) è il valore di riferimento per la trasmittanza B
             risultati.update({
                 'spessore_finale_mm': X_mm, 
                 'kerma_non_schermato': K_tu, 
-                'dettaglio': f"Spessore TC calcolato. {log_msg}"
+                'dettaglio': f"Spessore TC calcolato. {log_msg}",
+                'K1sec_head_mGy_paz': K1sec_head,
+                'K1sec_body_mGy_paz': K1sec_body
             })
             
         else:
             risultati['errore'] = "Tipo di barriera non specificato nel Ramo 3 (TC)."
-    # FIX CRUCIALE: Ritorna sempre il dizionario risultati
     return risultati
 
 # ====================================================================
@@ -415,7 +398,7 @@ def run_shielding_calculation(params):
 def main_app():
     st.set_page_config(page_title="Calcolo Schermatura NCRP 147", layout="wide")
     st.title("Calcolo Schermatura Radiologica (NCRP 147)")
-    st.caption("Implementazione della logica Ramo 1 e Ramo 2.")
+    st.caption("Implementazione della logica Ramo 1, 2 e 3 (TC).")
     
     # --- Sezione Input ---
     col1, col2, col3 = st.columns(3)
@@ -437,12 +420,12 @@ def main_app():
         tipo_barriera = st.selectbox("Tipo di Barriera", ["PRIMARIA", "SECONDARIA"])
         materiale_schermatura = st.selectbox("Materiale Schermatura", ["PIOMBO", "CEMENTO"])
         
-        # NUOVO CAMPO kVp PER TC
+        # CAMPO kVp PER TC
         kvp_tc = "N/A" # Default per non-TC
         if tipo_immagine == "TC":
             kvp_tc = st.selectbox(
                 "Tensione di Picco (kVp) TC", 
-                list(ATTENUATION_DATA_TC[materiale_schermatura].keys()), # Esempio: ["120 kVp", "140 kVp"]
+                list(ATTENUATION_DATA_TC[materiale_schermatura].keys()),
                 index=0
             )
 
@@ -466,31 +449,20 @@ def main_app():
         pazienti_settimana_N = st.number_input("Pazienti/Settimana (N)", value=100, min_value=1)
         
         # ====================================================================
-        # NUOVI CAMPI SPECIFICI TC (RAMO 3)
+        # CAMPI SPECIFICI TC (RAMO 3)
         # ====================================================================
         weekly_n_head = 0
         weekly_n_body = 0
-        
-        # Gestione del DLP (SEZIONE MODIFICATA)
-        dlp_mGy_cm = 0.0
         contrast_factor = 1.0
         
         if tipo_immagine == "TC":
-            st.markdown("---") # Separatore per i nuovi campi TC
-            st.subheader("Parametri TC Specifici")
+            st.markdown("---") 
+            st.subheader("Parametri di Calcolo Kerma TC")
             
-            # NUOVO SELECTBOX PER SELEZIONE DLP (Imposta 550 come default)
-            dlp_option_key = st.selectbox(
-                "DLP di Riferimento (mGy*cm) - Tab. 5.2",
-                options=list(DLP_REFERENCE_VALUES.keys()),
-                # IMPORTO E USO IL NUOVO DEFAULT
-                index=list(DLP_REFERENCE_VALUES.keys()).index(DLP_DEFAULT_KEY_TC), 
-                help="Seleziona il DLP medio di riferimento per la procedura."
-            )
-            # Recupera il valore DLP numerico per il calcolo
-            dlp_mGy_cm = DLP_REFERENCE_VALUES[dlp_option_key]['DLP']
+            # Mostra i DLP fissi utilizzati (non modificabili)
+            st.write(f"DLP Head (Fisso, Tab. 5.2): **{DLP_TC_FIXED_VALUES['HEAD']}** mGy·cm")
+            st.write(f"DLP Body (Fisso, Tab. 5.2): **{DLP_TC_FIXED_VALUES['BODY']}** mGy·cm")
             
-            st.write(f"DLP selezionato: **{dlp_mGy_cm}** mGy·cm")
             st.subheader("Ripartizione Esami Settimanali (N)")
             
             weekly_n_head = st.number_input(
@@ -516,14 +488,14 @@ def main_app():
                 help="Fattore moltiplicativo per il Kerma dovuto all'uso di Mezzo di Contrasto."
             )
 
-        st.markdown("---") # Separatore visivo
+        st.markdown("---") 
         
         # NUOVO CAMPO X-PRE (SELECTBOX)
         X_PRE_selection = st.selectbox(
-            "Schermatura X-PRE- DETETTORE O PREESISTENTE[mm]", 
+            "Schermatura X-PRE [mm]", 
             options=list(PRESHIELDING_XPRE_OPTIONS.keys()),
-            index=0, # Imposta "NESSUNO (0.0 mm)" come default
-            help="Schermatura intrinseca del sistema di ricezione dell'immagine o preesistente(NCRP 147). Selezionare 0.0 mm se non applicabile."
+            index=0, 
+            help="Schermatura intrinseca del sistema di ricezione dell'immagine (NCRP 147)."
         )
         
         # Ottieni il valore numerico (mm) dalla selezione
@@ -534,7 +506,6 @@ def main_app():
         st.header("3. Esecuzione")
         
         # Creazione del dizionario dei parametri
-        # AGGIORNAMENTO DEL DIZIONARIO PARAMETRI (NUOVI CAMPI TC)
         params = {
             'tipo_immagine': tipo_immagine,
             'modalita_radiografia': modalita_radiografia,
@@ -547,15 +518,14 @@ def main_app():
             'pazienti_settimana_N': pazienti_settimana_N,
             'X_PRE_mm': X_PRE_value,
             # AGGIUNTA DEI PARAMETRI TC (Cruciale per RAMO 3)
-            'dlp_mGy_cm': dlp_mGy_cm, 
             'weekly_n_head': weekly_n_head,
             'weekly_n_body': weekly_n_body,
             'contrast_factor': contrast_factor,
             'kvp_tc': kvp_tc
+            # Eliminati dlp_mGy_cm e ctdivol_mGy dai parametri passati
         }
         
         if st.button("🟡 ESEGUI CALCOLO SCHERMATURA", type="primary"):
-            # Inizializza session state se non esiste (utile per l'esecuzione)
             if 'results' not in st.session_state:
                 st.session_state['results'] = None
             if 'run' not in st.session_state:
@@ -583,28 +553,29 @@ def main_app():
             col_res2.metric("Kerma Non Schermato (alla distanza d)", f"{results.get('kerma_non_schermato', 0.0):.2f} mGy/settimana")
             col_res3.metric("Fattore di Uso (U) Utilizzato", f"{params['fattore_uso_U']:.2f}")
             
-            # Display dettagli secondari (se disponibili)
-            if results['ramo_logico'] in ["RAMO 1: DIAGNOSTICA STANDARD", "RAMO 2: DIAGNOSTICA SPECIALIZZATA"]:
-                st.subheader("Dettagli del Processo")
-                st.info(results['dettaglio'])
-                
-                if params['tipo_barriera'] == "SECONDARIA":
-                    st.markdown("**Componenti Secondarie (Modello Ks1 Combinato):**")
-                    st.write(f"- Spessore Fuga (X_L): {results.get('X_fuga_mm', 0.0):.2f} mm")
-                    st.write(f"- Spessore Diffusione (X_S): {results.get('X_diffusione_mm', 0.0):.2f} mm")
-            
-            elif results['ramo_logico'] == 'RAMO 3: TC (Calcolo Spessore)':
+            # Display dettagli secondari
+            if results['ramo_logico'] == 'RAMO 3: TC (Calcolo Spessore)':
                  st.subheader("Dettagli del Processo")
                  st.info(results['dettaglio'])
+                 st.markdown("**Valori di Kerma $K_{1sec}$ calcolati (a 1 metro):**")
+                 st.write(f"- $K_{{1sec}}(\\text{{Head}})$: {results.get('K1sec_head_mGy_paz', 0.0):.2e} mGy/paziente (DLP fisso: {DLP_TC_FIXED_VALUES['HEAD']} mGy·cm)")
+                 st.write(f"- $K_{{1sec}}(\\text{{Body}})$: {results.get('K1sec_body_mGy_paz', 0.0):.2e} mGy/paziente (DLP fisso: {DLP_TC_FIXED_VALUES['BODY']} mGy·cm)")
                  st.markdown("**Parametri TC utilizzati:**")
-                 st.write(f"- DLP di Riferimento: {params['dlp_mGy_cm']} mGy·cm")
                  st.write(f"- $K_c$ (Fattore Contrasto): {params['contrast_factor']:.1f}")
                  st.write(f"- N Testa/settimana: {params['weekly_n_head']}")
                  st.write(f"- N Corpo/settimana: {params['weekly_n_body']}")
                  st.write(f"- $X_{{pre}}$ (Pre-schermatura): {params['X_PRE_mm']:.2f} mm")
+            
+            else: # Ramo 1 e 2
+                st.subheader("Dettagli del Processo")
+                st.info(results['dettaglio'])
+                
+                if params['tipo_barriera'] == "SECONDARIA":
+                    st.markdown("**Componenti Secondarie (Modello $K_{s1}$ Combinato):**")
+                    st.write(f"- Spessore Fuga ($X_L$): {results.get('X_fuga_mm', 0.0):.2f} mm")
+                    st.write(f"- Spessore Diffusione ($X_S$): {results.get('X_diffusione_mm', 0.0):.2f} mm")
                  
 if __name__ == "__main__":
-   # FIX: Aggiunto un controllo per evitare errori Streamlit se non in session state
    if 'run' not in st.session_state:
        st.session_state['run'] = False
    if 'results' not in st.session_state:
