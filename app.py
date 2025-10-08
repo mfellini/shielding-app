@@ -457,11 +457,11 @@ def main_app():
         
         if tipo_immagine == "TC":
             st.markdown("---") 
-            st.subheader("Parametri di Calcolo Kerma TC")
+            # st.subheader("Parametri di Calcolo Kerma TC")
             
             # Mostra i DLP fissi utilizzati (non modificabili)
-            st.write(f"DLP Head (Fisso, Tab. 5.2): **{DLP_TC_FIXED_VALUES['HEAD']}** mGy·cm")
-            st.write(f"DLP Body (Fisso, Tab. 5.2): **{DLP_TC_FIXED_VALUES['BODY']}** mGy·cm")
+            # st.write(f"DLP Head (Fisso, Tab. 5.2): **{DLP_TC_FIXED_VALUES['HEAD']}** mGy·cm")
+            # st.write(f"DLP Body (Fisso, Tab. 5.2): **{DLP_TC_FIXED_VALUES['BODY']}** mGy·cm")
             
             st.subheader("Ripartizione Esami Settimanali (N)")
             
@@ -492,7 +492,7 @@ def main_app():
         
         # NUOVO CAMPO X-PRE (SELECTBOX)
         X_PRE_selection = st.selectbox(
-            "Schermatura X-PRE [mm]", 
+            "Schermatura X-PRE detettore o barriera pre-esistente [mm]", 
             options=list(PRESHIELDING_XPRE_OPTIONS.keys()),
             index=0, 
             help="Schermatura intrinseca del sistema di ricezione dell'immagine (NCRP 147)."
