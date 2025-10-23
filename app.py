@@ -651,19 +651,23 @@ def main_app():
         st.markdown("---") 
         
         # LOGICA DINAMICA PER LA SELEZIONE X-PRE
-        # *** MODIFICA EFFETTUATA QUI ***
-        # STANZA RADIOGRAFICA TORACE(CHEST ROOM) è stato rimosso dalla condizione Cross-Table per usare Table/Holder
-        if modalita_radiografia == "STANZA RADIOGRAFICA (CHEST BUCKY)": 
-            # Per CHEST BUCKY, tipicamente Cross-Table Lateral (NCRP 147)
-            options_x_pre = X_PRE_CROSS_TABLE_KEYS
-            default_index = options_x_pre.index("PIOMBO (0.3 mm) - Cross-Table Lateral") if "PIOMBO (0.3 mm) - Cross-Table Lateral" in options_x_pre else 0
-            help_text = "Schermatura intrinseca del ricevitore immagine (Cross-Table Lateral)."
+        # *** LOGICA AGGIORNATA PER STANZA RADIOGRAFICA (CHEST BUCKY) ***
+        if modalita_radiografia == "STANZA RADIOGRAFICA (CHEST BUCKY)" or modalita_radiografia == "STANZA RADIOGRAFICA TORACE(CHEST ROOM)":
+            # Per CHEST BUCKY e CHEST ROOM, usa Table/Holder come richiesto.
+            options_x_pre = X_PRE_TABLE_HOLDER_KEYS
+            default_index = options_x_pre.index("PIOMBO (0.85 mm) - Table/Holder") if "PIOMBO (0.85 mm) - Table/Holder" in options_x_pre else 0
+            help_text = "Schermatura intrinseca del ricevitore immagine (Table/Holder)."
         else:
-            # Include: STANZA RADIOGRAFICA TORACE(CHEST ROOM), Tutte Barriere, Fluoro, Angio, TC, etc.
+            # Tutte le altre modalità/TC, usiamo le opzioni Table/Holder come default.
+            # Nota: se l'intento è usare Cross-Table per CHEST BUCKY, la condizione deve essere modificata.
             options_x_pre = X_PRE_TABLE_HOLDER_KEYS
             default_index = options_x_pre.index("PIOMBO (0.85 mm) - Table/Holder") if "PIOMBO (0.85 mm) - Table/Holder" in options_x_pre else 0
             help_text = "Schermatura intrinseca del ricevitore immagine (Table/Holder, o NESSUNO se non applicabile)."
             
+            # Nota: Questa else-block ora copre tutte le modalità tranne CHEST BUCKY e CHEST ROOM, ma usa gli stessi Table/Holder keys.
+            # Se in futuro si desidera usare Cross-Table per altre modalità, la logica andrà perfezionata.
+
+        
         # Selectbox dinamico:
         X_PRE_selection_key = st.selectbox(
             "Schermatura Pre-esistente ($X_{pre}$) [mm]", 
