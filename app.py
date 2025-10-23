@@ -51,8 +51,8 @@ KERMA_DATA = {
         'Ksec1_ForBack': 3.9e-2, # 3.9*10^-2
         'Ksec1_Comb': 4.0e-2, # Corretto 4.0*0-2 a 4.0*10^-2
     },
-    # 6. STANZA RADIOGRAFICA TORACE
-    "STANZA RADIOGRAFICA TORACE": {
+    # 6. STANZA RADIOGRAFICA TORACE (CHEST ROOM) - NOME AGGIORNATO
+    "STANZA RADIOGRAFICA TORACE(CHEST ROOM)": {
         'Wnorm': 0.22,
         'Kp1': 1.2, # Kp1 da Tab 4.5 (Se la barriera è primaria)
         'Ksec1_LeakSide': 2.7e-3, # 2.7*10^-3
@@ -108,7 +108,7 @@ ATTENUATION_DATA_PRIMARY = {
         "PIOMBO": {'alpha': 2.295, 'beta': 1.3e+01, 'gamma': 5.573e-01},
         "CEMENTO": {'alpha': 3.549e-02, 'beta': 1.164e-01, 'gamma': 5.774e-01}
     },
-    "STANZA RADIOGRAFICA TORACE": {
+    "STANZA RADIOGRAFICA TORACE(CHEST ROOM)": {
         "PIOMBO": {'alpha': 2.283, 'beta': 1.074e+01, 'gamma': 6.37e-01},
         "CEMENTO": {'alpha': 3.622e-02, 'beta': 7.766e-02, 'gamma': 5.404e-01}
     },
@@ -149,7 +149,7 @@ ATTENUATION_DATA_SECONDARY = {
         "PIOMBO": {'alpha': 2.272, 'beta': 1.360e+01, 'gamma': 7.184e-01},
         "CEMENTO": {'alpha': 3.560e-02, 'beta': 1.114e-01, 'gamma': 6.620e-01}
     },
-    "STANZA RADIOGRAFICA TORACE": {
+    "STANZA RADIOGRAFICA TORACE(CHEST ROOM)": {
         "PIOMBO": {'alpha': 2.288, 'beta': 9.848, 'gamma': 1.054},
         "CEMENTO": {'alpha': 3.640e-02, 'beta': 6.590e-02, 'gamma': 7.543e-01}
     },
@@ -168,8 +168,7 @@ ATTENUATION_DATA_SECONDARY = {
 }
 
 
-# NUOVI DIZIONARI PER TC (RAMO 3) - Basati su kVp
-# TABELLA A.1 (Piombo) (Cemento) e equazione A.2 NCRP 147
+# Parametri di Fitting (Alfa, Beta, Gamma) per Barriera TC (RAMO 3)
 ATTENUATION_DATA_TC = {
     "PIOMBO": {
         "120 kVp": {'alpha': 2.246, 'beta': 8.95, 'gamma': 5.873e-01},
@@ -230,7 +229,7 @@ RAMO_1_MODES = [
     "STANZA RADIOGRAFICA (CHEST BUCKY)",
     "STANZA RADIOGRAFICA (PIANO/ALTRE BARRIERE)",
     "RADIOGRAFIA (TUBO R&F)",
-    "STANZA RADIOGRAFICA TORACE",
+    "STANZA RADIOGRAFICA TORACE(CHEST ROOM)", 
 ]
 
 # Chiavi che seguono la logica del RAMO 2 (Diagnostica Specializzata/Fluoro/Generica)
@@ -252,21 +251,12 @@ def calcola_spessore_x(alpha, beta, gamma, B):
         if B is None or B <= 0 or alpha == 0 or gamma == 0:
             return 999.0
         
-        # Gestione di B troppo piccolo
-        # Se B è molto piccolo, B**(-gamma) diventa molto grande, il che è corretto per X grande.
-        # Evitiamo calcoli non validi in math.log
-        
         # Formula: X = (1 / (alpha * gamma)) * ln( [ B^(-gamma) + (beta / alpha) ] / [ 1 + (beta / alpha) ] )
         
         numeratore_ln = B**(-gamma) + (beta / alpha)
         denominatore_ln = 1 + (beta / alpha)
         
-        if denominatore_ln == 0:
-            return 999.0
-
-        if numeratore_ln <= 0:
-            # Questo può succedere solo se B^(-gamma) è un numero negativo molto grande
-            # o se beta/alpha è negativo, il che non dovrebbe accadere con i dati NCRP 147.
+        if denominatore_ln == 0 or numeratore_ln <= 0:
             return 999.0
             
         x = (1 / (alpha * gamma)) * math.log(numeratore_ln / denominatore_ln)
@@ -299,7 +289,7 @@ def calcola_kerma_incidente(K_val, U, N, d):
 def calculate_primary_thickness(params):
     """ 
     Implementa il calcolo Primario (Ramo 1). 
-    *** MODIFICATO: Usa la chiave esatta selezionata dalla UI ***
+    Usa la chiave esatta selezionata dalla UI.
     """
     P = params.get('P_mSv_wk', 0.0) 
     T = params.get('tasso_occupazione_T', 1.0)
@@ -316,7 +306,7 @@ def calculate_primary_thickness(params):
     # Kp1 è in mGy*m^2 / mAs
     Kp1_data = KERMA_DATA.get(modalita_key, {}).get('Kp1')
     
-    # Se Kp1 è None (tipico per modalità in RAMO 2 come TUTTE BARRIERE, Mammo, Angio), gestisce l'errore.
+    # Se Kp1 è None, gestisce l'errore.
     if Kp1_data is None:
         return 0.0, 0.0, f"Dati Kp1 non definiti per la modalità '{modalita}' o non è prevista una barriera Primaria NCRP 147."
 
@@ -349,7 +339,7 @@ def calculate_primary_thickness(params):
 def calculate_secondary_thickness(params):
     """ 
     Implementa il calcolo Secondario (Ramo 1/2). 
-    *** MODIFICATO: Usa la chiave esatta selezionata dalla UI ***
+    Usa la chiave esatta selezionata dalla UI.
     """
     P = params.get('P_mSv_wk', 0.0) 
     T = params.get('tasso_occupazione_T', 1.0)
@@ -477,7 +467,6 @@ def calculate_tc_thickness(params):
 def run_shielding_calculation(params):
     """
     Funzione principale che gestisce la logica if-then-else e indirizza i calcoli.
-    *** MODIFICATO: Logica Ramo 1 e Ramo 2 basata sulle liste RAMO_1_MODES e RAMO_2_MODES ***
     """
     tipo_immagine = params.get('tipo_immagine')
     tipo_barriera = params.get('tipo_barriera')
@@ -494,7 +483,11 @@ def run_shielding_calculation(params):
         
         if tipo_barriera == "PRIMARIA":
             X_mm, K_non_schermato, log_msg = calculate_primary_thickness(params) 
-            risultati.update({'spessore_finale_mm': X_mm, 'kerma_non_schermato': K_non_schermato, 'dettaglio': f"Eseguito calcolo Primario. {log_msg}"})
+            # Gestione errore se Kp1=None
+            if log_msg.startswith("Dati Kp1 non definiti"):
+                risultati.update({'errore': log_msg})
+            else:
+                 risultati.update({'spessore_finale_mm': X_mm, 'kerma_non_schermato': K_non_schermato, 'dettaglio': f"Eseguito calcolo Primario. {log_msg}"})
         
         elif tipo_barriera == "SECONDARIA":
             X_mm, X_L, X_S, K_non_schermato, log_msg = calculate_secondary_thickness(params)
@@ -512,16 +505,15 @@ def run_shielding_calculation(params):
         risultati['ramo_logico'] = "RAMO 2: DIAGNOSTICA SPECIALIZZATA/GENERICA"
         
         if tipo_barriera == "PRIMARIA":
-              # Queste modalità (TUTTE BARRIERE, Mammo, Angio, Fluoro) hanno Kp1=None o sono gestite diversamente.
-              # La funzione calculate_primary_thickness restituirà un messaggio di Kp1 non definito.
+              # Queste modalità (TUTTE BARRIERE, Mammo, Angio, Fluoro) hanno Kp1=None
               X_mm, K_non_schermato, log_msg = calculate_primary_thickness(params)
               
               if log_msg.startswith("Dati Kp1 non definiti"):
                 risultati['spessore_finale_mm'] = 0.0
                 risultati['dettaglio'] = f"Calcolo Primario omesso per modalità specializzata/generica (Kp1 non definito). Dettaglio: {log_msg}"
               else:
-                 risultati.update({'spessore_finale_mm': X_mm, 'kerma_non_schermato': K_non_schermato, 'dettaglio': f"Eseguito calcolo Primario Ramo 2. {log_msg}"})
-              
+                risultati.update({'spessore_finale_mm': X_mm, 'kerma_non_schermato': K_non_schermato, 'dettaglio': f"Eseguito calcolo Primario Ramo 2. {log_msg}"})
+
         
         elif tipo_barriera == "SECONDARIA":
             X_mm, X_L, X_S, K_non_schermato, log_msg = calculate_special_secondary_thickness(params)
@@ -583,9 +575,8 @@ def main_app():
         
         # Opzioni basate sul Tipo di Immagine
         if tipo_immagine == "RADIOLOGIA DIAGNOSTICA":
-            # *** MODIFICA UI: Usa tutte le chiavi di KERMA_DATA ***
+            # Usa tutte le chiavi di KERMA_DATA
             modalita_radiografia_options = MODALITA_RADIOGRAFIA_UI_OPTIONS
-            # *** FINE MODIFICA UI ***
         else:
              modalita_radiografia_options = ["DLP", "Placeholder"]
             
@@ -660,13 +651,15 @@ def main_app():
         st.markdown("---") 
         
         # LOGICA DINAMICA PER LA SELEZIONE X-PRE
-        if modalita_radiografia in ["STANZA RADIOGRAFICA TORACE", "STANZA RADIOGRAFICA (CHEST BUCKY)"]:
-            # Per il torace, tipicamente si usa la modalità Cross-Table Lateral
+        # *** MODIFICA EFFETTUATA QUI ***
+        # STANZA RADIOGRAFICA TORACE(CHEST ROOM) è stato rimosso dalla condizione Cross-Table per usare Table/Holder
+        if modalita_radiografia == "STANZA RADIOGRAFICA (CHEST BUCKY)": 
+            # Per CHEST BUCKY, tipicamente Cross-Table Lateral (NCRP 147)
             options_x_pre = X_PRE_CROSS_TABLE_KEYS
             default_index = options_x_pre.index("PIOMBO (0.3 mm) - Cross-Table Lateral") if "PIOMBO (0.3 mm) - Cross-Table Lateral" in options_x_pre else 0
             help_text = "Schermatura intrinseca del ricevitore immagine (Cross-Table Lateral)."
         else:
-            # Per tutte le altre modalità/TC, usiamo le opzioni Table/Holder come default
+            # Include: STANZA RADIOGRAFICA TORACE(CHEST ROOM), Tutte Barriere, Fluoro, Angio, TC, etc.
             options_x_pre = X_PRE_TABLE_HOLDER_KEYS
             default_index = options_x_pre.index("PIOMBO (0.85 mm) - Table/Holder") if "PIOMBO (0.85 mm) - Table/Holder" in options_x_pre else 0
             help_text = "Schermatura intrinseca del ricevitore immagine (Table/Holder, o NESSUNO se non applicabile)."
