@@ -38,7 +38,7 @@ KERMA_DATA = {
     # 4. TUBO FLUOROSCOPICO STANZA R&F
     "FLUOROSCOPIA (R&F)": {
         'Wnorm': 13.0,
-        'Kp1': 5.9, # Kp1 da Tab 4.5 (Usato se la barriera R&F è considerata primaria/pavimento)
+        'Kp1': None, # Usato per barriere secondarie
         'Ksec1_LeakSide': 3.2e-1, # 3.2*10^-1
         'Ksec1_ForBack': 4.4e-1, # 4.4*10^-1
         'Ksec1_Comb': 4.6e-1,
@@ -46,7 +46,7 @@ KERMA_DATA = {
     # 5. TUBO RADIOGENO STANZA R&F
     "RADIOGRAFIA (TUBO R&F)": {
         'Wnorm': 1.5,
-        'Kp1': None, # Usato per barriere secondarie
+        'Kp1': 5.9, # Kp1 da Tab 4.5 (Se la barriera è primaria)
         'Ksec1_LeakSide': 2.9e-2, # 2.9*10^-2
         'Ksec1_ForBack': 3.9e-2, # 3.9*10^-2
         'Ksec1_Comb': 4.0e-2, # Corretto 4.0*0-2 a 4.0*10^-2
