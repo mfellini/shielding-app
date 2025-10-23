@@ -219,6 +219,27 @@ K_BODY_DIFF = 3.0e-4 # 3 x 10^-4 cm^-1
 
 
 # ====================================================================
+# NUOVE MAPPATURE LOGICHE DEFINITE DALL'UTENTE
+# ====================================================================
+
+# Tutte le chiavi di KERMA_DATA da mostrare nella UI (include TUTTE BARRIERE)
+MODALITA_RADIOGRAFIA_UI_OPTIONS = list(KERMA_DATA.keys()) 
+
+# Chiavi che seguono la logica del RAMO 1 (Diagnostica Standard)
+RAMO_1_MODES = [
+    "STANZA RADIOGRAFICA (CHEST BUCKY)",
+    "STANZA RADIOGRAFICA (PIANO/ALTRE BARRIERE)",
+    "RADIOGRAFIA (TUBO R&F)",
+    "STANZA RADIOGRAFICA TORACE",
+]
+
+# Chiavi che seguono la logica del RAMO 2 (Diagnostica Specializzata/Fluoro/Generica)
+RAMO_2_MODES = [
+    k for k in MODALITA_RADIOGRAFIA_UI_OPTIONS if k not in RAMO_1_MODES
+]
+
+
+# ====================================================================
 # 2. FUNZIONI ANALITICHE BASE
 # ====================================================================
 
@@ -262,30 +283,8 @@ def calcola_kerma_incidente(K_val, U, N, d):
     """
     try:
         if d <= 0: return 0.0
-        # K_val è in mGy*m^2 / (mAs * paziente) o mGy*m^2 / (min*paziente)
-        # kerma: (mGy*m^2/paz) * (min/sett) * (paz/sett) / m^2
-        # Kerma_unshielded = K_val * U * N / d^2 (NCRP 147, Eq. 4.3 per primario, Eq 4.4/4.5 per secondario)
-        # Nota: Kp1 e Ksec1 sono già normalizzati per U. La formula corretta NCRP 147 è:
-        # P / (K_val * W_norm * T / d^2) con K_val = Kp1/Ksec1 e W_norm = U*N*T/T = U*N.
-        # Usiamo: $K_{tu} = (K_{val} \cdot U \cdot N) / d^2$. Se K_val è Kp1 o Ksec1 combinato (già include la normalizzazione a $W_{norm}$), l'uso di U e N è implicito in $K_{val} \cdot U \cdot N$.
-        # Riferendoci all'Eq. 4.4, per secondario (e 4.3 per primario):
-        # Kerma_unshielded = (K_val * W_norm) / d^2.
-        # Nella nostra implementazione, K_val è $K_{p1}$ o $K_{s1}$ (Tab 4.5 e 4.7).
-        # $W_{norm}$ è il carico di lavoro normalizzato in Tab. 4.7.
-        # $K_{s1}$ o $K_{p1}$ sono già in mGy per U*N*W.
-        # Utilizziamo la formula generica che si adatta all'uso di Kp1/Ksec1 (che sono Kerma per $W_{norm}$ a 1m)
-        # Kerma Incidente = Kerma_Val * N / d^2. U è un fattore separato.
-        # $P = B \cdot K_{incidente} \cdot T$. $K_{incidente} = \frac{K_{val} \cdot U \cdot N}{d^2}$
-        
         # $K_{incidente}$ (mGy/settimana)
-        # N: Pazienti/settimana. U: Fattore di uso. d: Distanza (m). K_val: Kp1 o Ksec1 (mGy*m^2 / mAs)
-        # Se usiamo i valori tabulati $K_{p1}$ e $K_{s1}$ (già $K_{norm}$):
-        # La formula NCRP 147 (Eq 4.3 e 4.4) usa $W_N$ (lavoro normalizzato) per $K_{p1}$ e $K_{s1}$
-        # $K_{tu} = \frac{K_{val} \cdot W}{d^2}$. Qui $W$ è $U \cdot N \cdot T_{norm}$.
-        # I nostri Kp1 e Ksec1 sono Kerma normalizzati (es. mGy a 1m per $W_{norm}$ in mA-min/wk).
-        # La formula corretta da NCRP 147 per i dati $K_{p1}/K_{s1}$ (in mGy per $W_{norm}$ in mAs) è:
-        # $K_{tu} = K_{val} \cdot W / d^2$. Dove W è il carico di lavoro attuale $W = U \cdot N \cdot W_{norm}$ (approssimazione)
-        # Per semplicità, usiamo l'implementazione del codice: $K_{tu} = (K_{val} \cdot U \cdot N) / (d^2)$
+        # $K_{tu} = (K_{val} \cdot U \cdot N) / d^2$
         kerma = (K_val * U * N) / (d ** 2)
         return kerma
     except Exception:
@@ -298,7 +297,10 @@ def calcola_kerma_incidente(K_val, U, N, d):
 
 
 def calculate_primary_thickness(params):
-    """ Implementa il calcolo Primario (Ramo 1). """
+    """ 
+    Implementa il calcolo Primario (Ramo 1). 
+    *** MODIFICATO: Usa la chiave esatta selezionata dalla UI ***
+    """
     P = params.get('P_mSv_wk', 0.0) 
     T = params.get('tasso_occupazione_T', 1.0)
     d = params.get('distanza_d', 2.0)
@@ -308,32 +310,15 @@ def calculate_primary_thickness(params):
     materiale = params.get('materiale_schermatura')
     Xpre = params.get('X_PRE_mm', 0.0) 
 
-    # Recupera il valore Kp1. Accesso ai dati per la modalità specifica.
-    modalita_key = next((k for k in KERMA_DATA.keys() if k.startswith(modalita)), modalita)
-    
-    # Se è una modalità R&F e barriera primaria, l'utente potrebbe aver selezionato "FLUOROSCOPIA (R&F)"
-    # Dobbiamo adattare la chiave se la selezione è generica.
-    if modalita == "STANZA RADIOGRAFICA":
-        # Tentativo di recuperare dati per stanze radiografiche specifiche se il tipo di barriera è primaria
-        if params.get('tipo_barriera') == "PRIMARIA":
-             # L'utente deve aver specificato quale barriera primaria è (es. Chest Bucky o Piano/Altre)
-             # Questo codice non ha una selezione fine per distinguere CHB vs PIANO, usa il valore generico se possibile.
-             # Se non è specificato meglio, ci si affida a STANZA RADIOGRAFICA (TUTTE BARRIERE) che ha Kp1=None
-             # Usiamo "STANZA RADIOGRAFICA (PIANO/ALTRE BARRIERE)" come default per un primario generico con Kp1
-             modalita_key = "STANZA RADIOGRAFICA (PIANO/ALTRE BARRIERE)" 
-        else: # SECONDARIA, usa i valori del secondary
-             modalita_key = "STANZA RADIOGRAFICA (TUTTE BARRIERE)" 
-
-    if modalita == "FLUOROSCOPIA":
-        modalita_key = "FLUOROSCOPIA (R&F)" # Assumiamo tubo fluoroscopico
-
-    if modalita == "RADIOGRAFIA TORACE":
-        modalita_key = "STANZA RADIOGRAFICA TORACE"
+    # Usa la chiave selezionata dall'utente direttamente.
+    modalita_key = modalita
     
     # Kp1 è in mGy*m^2 / mAs
     Kp1_data = KERMA_DATA.get(modalita_key, {}).get('Kp1')
+    
+    # Se Kp1 è None (tipico per modalità in RAMO 2 come TUTTE BARRIERE, Mammo, Angio), gestisce l'errore.
     if Kp1_data is None:
-        return 0.0, 0.0, f"Dati Kp1 non definiti per la modalità '{modalita}' e barriera Primaria."
+        return 0.0, 0.0, f"Dati Kp1 non definiti per la modalità '{modalita}' o non è prevista una barriera Primaria NCRP 147."
 
     
     if modalita_key not in ATTENUATION_DATA_PRIMARY or materiale not in ATTENUATION_DATA_PRIMARY[modalita_key]:
@@ -362,7 +347,10 @@ def calculate_primary_thickness(params):
 
 
 def calculate_secondary_thickness(params):
-    """ Implementa il calcolo Secondario (Ramo 1/2). """
+    """ 
+    Implementa il calcolo Secondario (Ramo 1/2). 
+    *** MODIFICATO: Usa la chiave esatta selezionata dalla UI ***
+    """
     P = params.get('P_mSv_wk', 0.0) 
     T = params.get('tasso_occupazione_T', 1.0)
     d = params.get('distanza_d', 2.0)
@@ -372,23 +360,9 @@ def calculate_secondary_thickness(params):
     materiale = params.get('materiale_schermatura')
     Xpre = params.get('X_PRE_mm', 0.0) 
 
-    # Mappaggio della modalità radiografica alla chiave dati NCRP 147
-    modalita_map = {
-        "STANZA RADIOGRAFICA": "STANZA RADIOGRAFICA (TUTTE BARRIERE)",
-        "RADIOGRAFIA TORACE": "STANZA RADIOGRAFICA TORACE",
-        "FLUOROSCOPIA": "FLUOROSCOPIA (R&F)", 
-        "R&F": "RADIOGRAFIA (TUBO R&F)", # Usiamo il tubo radiogeno R&F per secondaria generica in R&F
-        "MAMMOGRAFIA": "MAMMOGRAFIA",
-        "ANGIO CARDIACA": "ANGIO CARDIACA",
-        "ANGIO PERIFERICA": "ANGIO PERIFERICA",
-        # Assumiamo che "ANGIO NEURO" utilizzi gli stessi parametri di "ANGIO CARDIACA" o "ANGIO PERIFERICA"
-        "ANGIO NEURO": "ANGIO PERIFERICA" 
-    }
+    # Usa la chiave selezionata dall'utente direttamente.
+    modalita_key = modalita
     
-    modalita_key = modalita_map.get(modalita)
-    if not modalita_key:
-        return 0.0, 0.0, 0.0, 0.0, f"Modalità '{modalita}' non mappata per il calcolo Secondario."
-
     # Ksec1 è in mGy*m^2 / mAs o mGy*m^2 / min
     Ksec1_data = KERMA_DATA.get(modalita_key, {}).get('Ksec1_Comb')
     if Ksec1_data is None:
@@ -503,6 +477,7 @@ def calculate_tc_thickness(params):
 def run_shielding_calculation(params):
     """
     Funzione principale che gestisce la logica if-then-else e indirizza i calcoli.
+    *** MODIFICATO: Logica Ramo 1 e Ramo 2 basata sulle liste RAMO_1_MODES e RAMO_2_MODES ***
     """
     tipo_immagine = params.get('tipo_immagine')
     tipo_barriera = params.get('tipo_barriera')
@@ -511,10 +486,9 @@ def run_shielding_calculation(params):
     risultati = {'ramo_logico': 'Non Eseguito', 'spessore_finale_mm': 0.0}
     
     # -------------------------------------------------------------------------
-    # RAMO 1: DIAGNOSTICA STANDARD (Stanza, Torace, Fluoroscopia)
+    # RAMO 1: DIAGNOSTICA STANDARD (Le 4 modalità definite dall'utente con Kp1)
     # -------------------------------------------------------------------------
-    if tipo_immagine == "RADIOLOGIA DIAGNOSTICA" and \
-       modalita_radiografia in ["STANZA RADIOGRAFICA", "RADIOGRAFIA TORACE", "FLUOROSCOPIA", "R&F"]:
+    if tipo_immagine == "RADIOLOGIA DIAGNOSTICA" and modalita_radiografia in RAMO_1_MODES:
         
         risultati['ramo_logico'] = "RAMO 1: DIAGNOSTICA STANDARD"
         
@@ -531,20 +505,27 @@ def run_shielding_calculation(params):
 
 
     # -------------------------------------------------------------------------
-    # RAMO 2: DIAGNOSTICA SPECIALIZZATA (Mammo, Angio)
+    # RAMO 2: DIAGNOSTICA SPECIALIZZATA/GENERICA (Tutte le altre voci, inclusa TUTTE BARRIERE)
     # -------------------------------------------------------------------------
-    elif tipo_immagine == "RADIOLOGIA DIAGNOSTICA" and \
-          modalita_radiografia in ["MAMMOGRAFIA", "ANGIO CARDIACA", "ANGIO PERIFERICA", "ANGIO NEURO"]:
+    elif tipo_immagine == "RADIOLOGIA DIAGNOSTICA" and modalita_radiografia in RAMO_2_MODES:
         
-        risultati['ramo_logico'] = "RAMO 2: DIAGNOSTICA SPECIALIZZATA"
+        risultati['ramo_logico'] = "RAMO 2: DIAGNOSTICA SPECIALIZZATA/GENERICA"
         
         if tipo_barriera == "PRIMARIA":
-              risultati['spessore_finale_mm'] = 0.0
-              risultati['dettaglio'] = "Calcolo Primario omesso (già gestito da detettore/apparecchio)."
+              # Queste modalità (TUTTE BARRIERE, Mammo, Angio, Fluoro) hanno Kp1=None o sono gestite diversamente.
+              # La funzione calculate_primary_thickness restituirà un messaggio di Kp1 non definito.
+              X_mm, K_non_schermato, log_msg = calculate_primary_thickness(params)
+              
+              if log_msg.startswith("Dati Kp1 non definiti"):
+                risultati['spessore_finale_mm'] = 0.0
+                risultati['dettaglio'] = f"Calcolo Primario omesso per modalità specializzata/generica (Kp1 non definito). Dettaglio: {log_msg}"
+              else:
+                 risultati.update({'spessore_finale_mm': X_mm, 'kerma_non_schermato': K_non_schermato, 'dettaglio': f"Eseguito calcolo Primario Ramo 2. {log_msg}"})
+              
         
         elif tipo_barriera == "SECONDARIA":
             X_mm, X_L, X_S, K_non_schermato, log_msg = calculate_special_secondary_thickness(params)
-            risultati.update({'spessore_finale_mm': X_mm, 'X_fuga_mm': X_L, 'X_diffusione_mm': X_S, 'kerma_non_schermato': K_non_schermato, 'dettaglio': f"Eseguito calcolo Secondario Specializzato. {log_msg}"})
+            risultati.update({'spessore_finale_mm': X_mm, 'X_fuga_mm': X_L, 'X_diffusione_mm': X_S, 'kerma_non_schermato': K_non_schermato, 'dettaglio': f"Eseguito calcolo Secondario Specializzato/Generico. {log_msg}"})
         
         else:
             risultati['errore'] = "Tipo di barriera non specificato nel Ramo 2."
@@ -602,8 +583,9 @@ def main_app():
         
         # Opzioni basate sul Tipo di Immagine
         if tipo_immagine == "RADIOLOGIA DIAGNOSTICA":
-            modalita_radiografia_options = ["STANZA RADIOGRAFICA", "RADIOGRAFIA TORACE", "FLUOROSCOPIA", 
-                                             "MAMMOGRAFIA", "ANGIO CARDIACA", "ANGIO PERIFERICA", "ANGIO NEURO", "R&F"]
+            # *** MODIFICA UI: Usa tutte le chiavi di KERMA_DATA ***
+            modalita_radiografia_options = MODALITA_RADIOGRAFIA_UI_OPTIONS
+            # *** FINE MODIFICA UI ***
         else:
              modalita_radiografia_options = ["DLP", "Placeholder"]
             
@@ -678,7 +660,7 @@ def main_app():
         st.markdown("---") 
         
         # LOGICA DINAMICA PER LA SELEZIONE X-PRE
-        if modalita_radiografia in ["RADIOGRAFIA TORACE", "STANZA RADIOGRAFICA (CHEST BUCKY)"]:
+        if modalita_radiografia in ["STANZA RADIOGRAFICA TORACE", "STANZA RADIOGRAFICA (CHEST BUCKY)"]:
             # Per il torace, tipicamente si usa la modalità Cross-Table Lateral
             options_x_pre = X_PRE_CROSS_TABLE_KEYS
             default_index = options_x_pre.index("PIOMBO (0.3 mm) - Cross-Table Lateral") if "PIOMBO (0.3 mm) - Cross-Table Lateral" in options_x_pre else 0
@@ -768,8 +750,16 @@ def main_app():
               
             else: # Ramo 1 e 2
                 st.info(results['dettaglio'])
+                
+                # Ottiene la chiave NCRP utilizzata per l'attenuazione (per display)
+                ncrp_key_used = params['modalita_radiografia']
+                
+                # Ottiene il valore Kp1 o Ksec1 combinato usato per il calcolo.
+                K_val = KERMA_DATA.get(ncrp_key_used, {}).get('Kp1', KERMA_DATA.get(ncrp_key_used, {}).get('Ksec1_Comb', 'N/A'))
+                
                 st.markdown(f"**Parametri di Input:**")
-                st.write(f"- $K_{{val}}$ (NCRP 147): {KERMA_DATA.get(results['dettaglio'].split('Modalità NCRP: ')[-1].split(' ')[0] if 'Modalità NCRP:' in results['dettaglio'] else params['modalita_radiografia'], {}).get('Kp1', KERMA_DATA.get(results['dettaglio'].split('Modalità NCRP: ')[-1].split(')')[0].split(': ')[-1] if 'Modalità NCRP:' in results['dettaglio'] else params['modalita_radiografia'], {}).get('Ksec1_Comb', 'N/A'))}")
+                st.write(f"- Modalità NCRP (Chiave Dati): {ncrp_key_used}")
+                st.write(f"- $K_{{val}}$ (NCRP 147): {K_val}")
                 st.write(f"- $X_{{pre}}$ (Pre-schermatura): {params['X_PRE_mm']:.2f} mm (Selezionato: {X_PRE_selection_key})")
                 
                 if params['tipo_barriera'] == "SECONDARIA":
