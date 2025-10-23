@@ -65,7 +65,7 @@ KERMA_DATA = {
         'Kp1': None, # Solo calcolo secondario per NCRP 147
         'Ksec1_LeakSide': 1.1e-2, # 1.1*10^-2
         'Ksec1_ForBack': 4.9e-2, # 4.9*10^-2
-        'Ksec1_Comb': 4.9e-2,
+        'Ksec1_Comb': 3.6e-2,
     },
     # 8. ANGIOGRAFIA CARDIACA
     "ANGIO CARDIACA": {
