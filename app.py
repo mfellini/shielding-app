@@ -611,7 +611,7 @@ def main_app():
         fattore_uso_U = st.number_input("Fattore di Uso (U) [0-1]", value=1.0, format="%.2f", min_value=0.0, max_value=1.0)
         
         # N: Pazienti/Settimana
-        pazienti_settimana_N = st.number_input("Pazienti/Settimana (N)", value=0, min_value=1)
+        pazienti_settimana_N = st.number_input("Pazienti/Settimana (N)", value=1, min_value=1)
         
         # ====================================================================
         # CAMPI SPECIFICI TC (RAMO 3)
