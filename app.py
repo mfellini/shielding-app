@@ -65,7 +65,7 @@ KERMA_DATA = {
         'Kp1': None, # Solo calcolo secondario per NCRP 147
         'Ksec1_LeakSide': 1.1e-2, # 1.1*10^-2
         'Ksec1_ForBack': 4.9e-2, # 4.9*10^-2
-        'Ksec1_Comb': 3.6e-2,
+        'Ksec1_Comb': 4.9e-2,
     },
     # 8. ANGIOGRAFIA CARDIACA
     "ANGIO CARDIACA": {
@@ -599,19 +599,19 @@ def main_app():
         st.header("2. Dati di Esercizio")
         
         # P: Dose limite (mSv/wk)
-        P_mSv_wk = st.number_input("Dose Limite (P) [mSv/settimana]", value=0.02, format="%.3f") 
+        P_mSv_wk = st.number_input("Dose Limite (P) [mSv/settimana]", value=0.0, format="%.3f") 
         
         # T: Tasso di Occupazione [0, 1]
         tasso_occupazione_T = st.number_input("Tasso Occupazione (T) [0-1]", value=1.0, format="%.2f", min_value=0.0, max_value=1.0)
         
         # d: Distanza (m)
-        distanza_d = st.number_input("Distanza dalla Sorgente (d) [metri]", value=2.0, format="%.2f", min_value=0.1)
+        distanza_d = st.number_input("Distanza dalla Sorgente (d) [metri]", value=1.0, format="%.2f", min_value=0.1)
         
         # U: Fattore di Uso [0, 1] - non usato per secondaria NCRP 147 ma incluso per primaria
-        fattore_uso_U = st.number_input("Fattore di Uso (U) [0-1]", value=0.25, format="%.2f", min_value=0.0, max_value=1.0)
+        fattore_uso_U = st.number_input("Fattore di Uso (U) [0-1]", value=1.0, format="%.2f", min_value=0.0, max_value=1.0)
         
         # N: Pazienti/Settimana
-        pazienti_settimana_N = st.number_input("Pazienti/Settimana (N)", value=100, min_value=1)
+        pazienti_settimana_N = st.number_input("Pazienti/Settimana (N)", value=0, min_value=1)
         
         # ====================================================================
         # CAMPI SPECIFICI TC (RAMO 3)
@@ -626,21 +626,21 @@ def main_app():
             
             weekly_n_head = st.number_input(
                 "WEEKLY N HEAD PROCED", 
-                value=40, 
+                value=0, 
                 min_value=0, 
                 help="Numero di procedure TC di Testa a settimana."
             )
             
             weekly_n_body = st.number_input(
                 "WEEKLY N BODY PROCED", 
-                value=60, 
+                value=0, 
                 min_value=0, 
                 help="Numero di procedure TC di Corpo a settimana."
             )
 
             contrast_factor = st.number_input(
                 "CONTRAST Factor ($K_c$)", 
-                value=1.4, 
+                value=1.0, 
                 min_value=1.0, 
                 max_value=2.0, 
                 format="%.1f",
